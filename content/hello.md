@@ -1,6 +1,10 @@
 +++
 title = "Let's try something new"
 date = 2020-07-23
+description = "This is my first post on this blog. I describe my motivations"
+
+[extra]
+extract_from = "content"
 +++
 
 This is my first post on this blog. Not my first blog post ever though. I

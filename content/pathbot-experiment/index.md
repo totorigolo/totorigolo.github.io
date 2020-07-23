@@ -1,6 +1,10 @@
 +++
 title = "My Pathbot experiment"
 date = 2019-07-09
+description = "A little game base on GitHub's Pathbot experiment, where you have to escape a maze."
+
+[extra]
+extract_from = "description"
 +++
 
 <div style="float: right; display: flex">

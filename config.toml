@@ -57,3 +57,4 @@ hyde_links = [
     {url = "https://github.com/tholac", name = "tholac@GitHub"},
     {url = "/atom.xml", name = "RSS / Atom"},
 ]
+hyde_datetime_format = "%Y-%m-%d"
