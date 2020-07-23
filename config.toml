@@ -1,0 +1,59 @@
+base_url = "https://blog.busy.ovh"
+title = "Thomas Lacroix"
+description = "Wanderings and random thoughts."
+
+# The site theme to use.
+theme = "hyde"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+highlight_theme = "monokai"
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = true
+
+# When set to "true", a feed is automatically generated.
+generate_feed = true
+
+# The filename to use for the feed. Used as the template filename, too.
+# Defaults to "atom.xml", which has a builtin template that renders an Atom 1.0 feed.
+# There is also a builtin template "rss.xml" that renders an RSS 2.0 feed.
+# feed_filename = "atom.xml"
+
+# The number of articles to include in the feed. All items are included if
+# this limit is not set (the default).
+# feed_limit = 20
+
+# The additional languages for the site.
+# Example:
+#     languages = [
+#       {code = "fr", feed = true}, # there will be a feed for French content
+#       {code = "fr", search = true}, # there will be a Search Index for French content
+#       {code = "it"}, # there won't be a feed for Italian content
+#     ]
+#
+languages = [
+    {code = "fr", search = true, feed = true},
+]
+
+default_language = "en"
+
+[translations]
+[translations.fr]
+foo = "Quelque chose"
+
+[translations.en]
+foo = "Something"
+
+[extra]
+# Put all your custom variables here
+
+hyde_links = [
+    {url = "https://github.com/totorigolo", name = "totorigolo@GitHub"},
+    {url = "https://github.com/tholac", name = "tholac@GitHub"},
+    {url = "/atom.xml", name = "RSS / Atom"},
+]
