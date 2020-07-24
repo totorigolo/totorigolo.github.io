@@ -8,8 +8,14 @@ extract_from = "description"
 +++
 
 <div style="float: right; display: flex">
-  <img src="rust-logo-blk-72px.png" style="object-fit: contain"/>
-  <img src="web-assembly-logo-128px.png" style="object-fit: contain"/>
+
+![WebAssembly](web-assembly-logo-128px.png)
+
+</div>
+<div style="float: right; display: flex">
+
+![Rust](rust-logo-blk-72px.png)
+
 </div>
 
 A little Pathbot experiment.
