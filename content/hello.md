@@ -1,7 +1,7 @@
 +++
 title = "Let's try something new"
 date = 2020-07-23
-description = "This is my first post on this blog. I describe my motivations"
+description = "This is my first post on this blog. I describe my motivations for writing."
 
 [extra]
 extract_from = "content"
