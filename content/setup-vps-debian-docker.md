@@ -104,7 +104,7 @@ follows:
 ```ini
 PermitRootLogin no
 PermitEmptyPasswords no
-PasswordAuthentication yes  <-- force using SSH keys
+PasswordAuthentication no  <-- force using SSH keys
 ```
 
 Then restart the SSH daemon:
