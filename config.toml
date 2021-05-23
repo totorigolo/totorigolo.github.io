@@ -52,6 +52,7 @@ foo = "Something"
 [extra]
 # Put all your custom variables here
 
+hyde_theme = "theme-base-0d"
 hyde_links = [
     {url = "https://github.com/totorigolo", name = "totorigolo@GitHub"},
     {url = "https://github.com/tholac", name = "tholac@GitHub"},
