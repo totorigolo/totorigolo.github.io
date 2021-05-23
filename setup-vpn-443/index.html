@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title>How to setup your own VPN on port 443</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+    
+
+    
+    
+  </head>
+
+  <body class="theme-base-0d ">
+    
+        <div class="sidebar">
+            <div class="container sidebar-sticky">
+                <div class="sidebar-about">
+                    
+                        <a href="https:&#x2F;&#x2F;blog.busy.ovh"><h1>Thomas Lacroix</h1></a>
+                        
+                        <p class="lead">Wanderings and random thoughts.</p>
+                        
+                    
+                </div>
+
+                <ul class="sidebar-nav">
+                    
+                    
+                    <li class="sidebar-nav-item"><a href="https:&#x2F;&#x2F;github.com&#x2F;totorigolo">totorigolo@GitHub</a></li>
+                    
+                    <li class="sidebar-nav-item"><a href="https:&#x2F;&#x2F;github.com&#x2F;tholac">tholac@GitHub</a></li>
+                    
+                    <li class="sidebar-nav-item"><a href="&#x2F;atom.xml">RSS &#x2F; Atom</a></li>
+                    
+                    
+                </ul>
+            </div>
+        </div>
+    
+
+    <div class="content container">
+      
+<div class="post">
+  <h1 class="post-title">How to setup your own VPN on port 443</h1>
+  
+    <span class="post-date">
+      2021-05-23
+    </span>
+  
+  <p>A few weeks ago, there has been a major incident in one of OVH's datacenter.
+Unfortunately, my two VPS burnt and I didn't have any backup. I didn't lose any
+data because I mostly use them to deploy toy projects. However, I did lose years
+of configurations. In this article, we will configure a VPN on Debian, with a
+slight variation from standard setup to be able to use it even in networks where
+non-Web ports are blocked. We will use HTTPS port (443) with a redirection of
+non-VPN traffic for potential reverse proxies.</p>
+<h2 id="step-1-read-digital-ocean-s-tutorial">Step 1: Read Digital Ocean's tutorial</h2>
+<p><a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-debian-10">https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-debian-10</a></p>
+<h2 id="step-2-configure-the-vpn-over-443">Step 2: Configure the VPN over 443</h2>
+<p>In <code>/etc/openvpn/server.conf</code>, change:</p>
+<pre style="background-color:#272822;">
+<code class="language-ini" data-lang="ini"><span style="font-style:italic;color:#fd971f;">port </span><span style="color:#ae81ff;">443
+</span><span style="font-style:italic;color:#fd971f;">proto </span><span style="color:#f8f8f2;">tcp
+</span><span style="font-style:italic;color:#fd971f;">explicit-exit-notify </span><span style="color:#ae81ff;">0
+
+</span><span style="color:#f8f8f2;"># This will redirect all non</span><span style="color:#f92672;">-</span><span style="color:#66d9ef;">VPN</span><span style="color:#f8f8f2;"> traffic to this fallback port</span><span style="color:#f92672;">.
+</span><span style="font-style:italic;color:#fd971f;">port-share </span><span style="color:#ae81ff;">127.0.0.1 4443
+</span></code></pre><h2 id="recap-how-to-create-a-new-client">Recap: How to create a new client</h2>
+<ol>
+<li>Generate a new client certificate/key pair.</li>
+</ol>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#75715e;"># On the OpenVPN server
+</span><span style="color:#f8f8f2;">./easyrsa gen-req </span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">client-name</span><span style="color:#f92672;">&gt;</span><span style="color:#f8f8f2;"> nopass
+cp pki/private/client1.key ~/client-configs/keys/
+</span><span style="color:#75715e;"># transfer key to CA server
+
+# On the CA server
+</span><span style="color:#f8f8f2;">./easyrsa import-req /path/to/</span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">client-name</span><span style="color:#f92672;">&gt;</span><span style="color:#f8f8f2;">.req </span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">client-name</span><span style="color:#f92672;">&gt;
+</span><span style="color:#f8f8f2;">./easyrsa sign-req client </span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">client-name</span><span style="color:#f92672;">&gt;
+</span><span style="color:#75715e;"># transfer the .crt to the OpenVPN server
+</span></code></pre>
+<ol start="2">
+<li>Create the client configuration file.</li>
+</ol>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">./make_config.sh </span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">client-name</span><span style="color:#f92672;">&gt;
+</span></code></pre>
+</div>
+
+    </div>
+  </body>
+</html>

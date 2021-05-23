@@ -1,0 +1,439 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+	<title>Thomas Lacroix</title>
+	<subtitle>Wanderings and random thoughts.</subtitle>
+	<link href="https://blog.busy.ovh/atom.xml" rel="self" type="application/atom+xml"/>
+  <link href="https://blog.busy.ovh"/>
+	<generator uri="https://www.getzola.org/">Zola</generator>
+	<updated>2021-05-23T00:00:00+00:00</updated>
+	<id>https://blog.busy.ovh/atom.xml</id>
+	<entry xml:lang="en">
+		<title>How to setup your own VPN on port 443</title>
+		<published>2021-05-23T00:00:00+00:00</published>
+		<updated>2021-05-23T00:00:00+00:00</updated>
+		<link href="https://blog.busy.ovh/setup-vpn-443/" type="text/html"/>
+		<id>https://blog.busy.ovh/setup-vpn-443/</id>
+		<content type="html">&lt;p&gt;A few weeks ago, there has been a major incident in one of OVH&#x27;s datacenter.
+Unfortunately, my two VPS burnt and I didn&#x27;t have any backup. I didn&#x27;t lose any
+data because I mostly use them to deploy toy projects. However, I did lose years
+of configurations. In this article, we will configure a VPN on Debian, with a
+slight variation from standard setup to be able to use it even in networks where
+non-Web ports are blocked. We will use HTTPS port (443) with a redirection of
+non-VPN traffic for potential reverse proxies.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;step-1-read-digital-ocean-s-tutorial&quot;&gt;Step 1: Read Digital Ocean&#x27;s tutorial&lt;&#x2F;h2&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.digitalocean.com&#x2F;community&#x2F;tutorials&#x2F;how-to-set-up-an-openvpn-server-on-debian-10&quot;&gt;https:&#x2F;&#x2F;www.digitalocean.com&#x2F;community&#x2F;tutorials&#x2F;how-to-set-up-an-openvpn-server-on-debian-10&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;step-2-configure-the-vpn-over-443&quot;&gt;Step 2: Configure the VPN over 443&lt;&#x2F;h2&gt;
+&lt;p&gt;In &lt;code&gt;&#x2F;etc&#x2F;openvpn&#x2F;server.conf&lt;&#x2F;code&gt;, change:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;port &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;443
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;proto &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;tcp
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;explicit-exit-notify &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;0
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;# This will redirect all non&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#66d9ef;&quot;&gt;VPN&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; traffic to this fallback port&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;.
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;port-share &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;127.0.0.1 4443
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h2 id=&quot;recap-how-to-create-a-new-client&quot;&gt;Recap: How to create a new client&lt;&#x2F;h2&gt;
+&lt;ol&gt;
+&lt;li&gt;Generate a new client certificate&#x2F;key pair.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# On the OpenVPN server
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;.&#x2F;easyrsa gen-req &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;client-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; nopass
+cp pki&#x2F;private&#x2F;client1.key ~&#x2F;client-configs&#x2F;keys&#x2F;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# transfer key to CA server
+
+# On the CA server
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;.&#x2F;easyrsa import-req &#x2F;path&#x2F;to&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;client-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;gt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;.req &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;client-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;.&#x2F;easyrsa sign-req client &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;client-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# transfer the .crt to the OpenVPN server
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;ol start=&quot;2&quot;&gt;
+&lt;li&gt;Create the client configuration file.&lt;&#x2F;li&gt;
+&lt;&#x2F;ol&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;.&#x2F;make_config.sh &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;client-name&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>How to setup a VPS - Debian, Docker</title>
+		<published>2020-07-24T00:00:00+00:00</published>
+		<updated>2020-07-24T00:00:00+00:00</updated>
+		<link href="https://blog.busy.ovh/setup-vps-debian-docker/" type="text/html"/>
+		<id>https://blog.busy.ovh/setup-vps-debian-docker/</id>
+		<content type="html">&lt;p&gt;In this article, I will describe how I setup my VPS servers based on Debian 10.
+The goal of this setup is to have a working and secure Docker setup with
+some monitoring and a few nice tools.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;password-manager&quot;&gt;Password manager&lt;&#x2F;h2&gt;
+&lt;p&gt;I won&#x27;t elaborate on the absolute necessity to use a password manager. I am
+using Keepass, and that&#x27;s more than useful to store all those lengthy passwords.&lt;&#x2F;p&gt;
+&lt;p&gt;I have chosen Keepass because it&#x27;s free and open source software, and it&#x27;s very
+secure. On Windows, I recommend using the &lt;a href=&quot;https:&#x2F;&#x2F;keepass.info&#x2F;&quot;&gt;official client&lt;&#x2F;a&gt;. On other
+platforms, I find &lt;a href=&quot;https:&#x2F;&#x2F;keepassxc.org&#x2F;&quot;&gt;KeepassXC&lt;&#x2F;a&gt; more stable. Note that both are
+compatible as they use the same file format to store passwords.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;debian-10&quot;&gt;Debian 10&lt;&#x2F;h2&gt;
+&lt;p&gt;This is on you, as it varies for each cloud provider. I chose Debian because it
+doesn&#x27;t evolve too fast, so I can forget it for a while without fear that I am
+late on updates. To be really safe doing so, I took the following actions:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;I subscribed to the &lt;a href=&quot;https:&#x2F;&#x2F;lists.debian.org&#x2F;debian-security-announce&#x2F;&quot;&gt;Debian security newsletter&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;I skimmed through the &lt;a href=&quot;https:&#x2F;&#x2F;www.debian.org&#x2F;security&#x2F;faq&quot;&gt;Debian Security FAQ&lt;&#x2F;a&gt;.&lt;&#x2F;li&gt;
+&lt;li&gt;I skimmed through the &lt;a href=&quot;https:&#x2F;&#x2F;www.debian.org&#x2F;doc&#x2F;user-manuals#securing&quot;&gt;Securing Debian Manual&lt;&#x2F;a&gt; (I hope I
+didn&#x27;t overlook something).&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+&lt;p&gt;&lt;strong&gt;Credits&lt;&#x2F;strong&gt;: I took inspiration from DigitalOcean&#x27;s &lt;a href=&quot;https:&#x2F;&#x2F;www.digitalocean.com&#x2F;community&#x2F;tutorials&#x2F;initial-server-setup-with-debian-10&quot;&gt;great
+tutorial&lt;&#x2F;a&gt; to write down those instructions. I
+recommend reading it, as I will not go into the details of the procedure.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;connecting-via-ssh-and-creating-a-new-user&quot;&gt;Connecting via SSH and creating a new user&lt;&#x2F;h3&gt;
+&lt;p&gt;From your computer&#x27;s terminal:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;ssh root@your_server_ip
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Change your root password if you haven&amp;#39;t done it yet
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;passwd
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;As we should not use &lt;code&gt;root&lt;&#x2F;code&gt; when not necessary, we will create a new user right
+away (I will use &lt;code&gt;tlacroix&lt;&#x2F;code&gt;, replace it with whatever username you want). This
+user will be a super-user, as we will use it for the following steps.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;adduser tlacroix
+usermod&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -aG&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; sudo tlacroix
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;We can take the opportunity to do an update, just in case:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;apt update
+apt upgrade
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;configuring-ssh-key-for-the-new-user&quot;&gt;Configuring SSH key for the new user&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;strong&gt;Credits&lt;&#x2F;strong&gt;: &lt;a href=&quot;https:&#x2F;&#x2F;www.digitalocean.com&#x2F;community&#x2F;tutorials&#x2F;how-to-set-up-ssh-keys-on-debian-10&quot;&gt;How to Set Up SSH Keys on Debian
+10&lt;&#x2F;a&gt;.
+Read it for more details.&lt;&#x2F;p&gt;
+&lt;p&gt;Create a key on your personal computer (use one per computer!) if you don&#x27;t
+already have one. From you computer, do:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;ssh-keygen&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -b&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; 4096
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;I recommend using a passphrase, to stay safe when you forget to lock you
+computer.&lt;&#x2F;p&gt;
+&lt;p&gt;Now, we must copy the public key to the server. From your computer, do:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;ssh-copy-id username@your_server_ip
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now you don&#x27;t have to use your user password anymore, but the SSH key
+passphrase.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;securing-ssh&quot;&gt;Securing SSH&lt;&#x2F;h3&gt;
+&lt;p&gt;Now that we can login as someone else than &lt;code&gt;root&lt;&#x2F;code&gt; without having to type a
+password, let&#x27;s forbid root login. Edit &lt;code&gt;&#x2F;etc&#x2F;ssh&#x2F;sshd_config&lt;&#x2F;code&gt; and update as
+follows:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-ini&quot; data-lang=&quot;ini&quot;&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;PermitRootLogin &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;no
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;PermitEmptyPasswords &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;no
+&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt;PasswordAuthentication &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;no  &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;--&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; force using &lt;&#x2F;span&gt;&lt;span style=&quot;color:#66d9ef;&quot;&gt;SSH&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; keys
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Then restart the SSH daemon:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo systemctl restart ssh
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;firewall-initial-setup&quot;&gt;Firewall - Initial setup&lt;&#x2F;h3&gt;
+&lt;p&gt;Now is a good time to setup a firewall, &lt;del&gt;to complicate our life&lt;&#x2F;del&gt; to control
+what goes in and out of our server. We will come back to it later multiple
+times, each time we will need to make a port visible to the outside world.&lt;&#x2F;p&gt;
+&lt;p&gt;I was previously using &lt;code&gt;iptables&lt;&#x2F;code&gt;, but I find it too cumbersome to use. To
+persist its configuration, I created a &lt;code&gt;systemd&lt;&#x2F;code&gt; service running a script during
+boot, located under &lt;code&gt;&#x2F;etc&lt;&#x2F;code&gt;, that contained calls to &lt;code&gt;iptables&lt;&#x2F;code&gt; to configure it.
+However, this file had a non-obvious syntax (&lt;code&gt;iptables&lt;&#x2F;code&gt; CLI, actually), so I&#x27;m
+moving to &lt;code&gt;ufw&lt;&#x2F;code&gt;, the &lt;em&gt;Uncomplicated Firewall&lt;&#x2F;em&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;Tip&lt;&#x2F;strong&gt;: if, in the future, you have connectivity issues with some service
+during initial setup, chances are high that it&#x27;s because of the firewall. Always
+keep that in mind.&lt;&#x2F;p&gt;
+&lt;p&gt;From your server:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Install UFW
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt update
+sudo apt install ufw
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Allow OpenSSH (otherwise we would be locked out)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo ufw allow OpenSSH
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Only do *after* the previous command
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo ufw enable
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# To have the current status of the firewall
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo ufw status verbose
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now, if by accident you do get locked out of your server because of the
+firewall, have a look for &amp;quot;KVM&amp;quot; in your provider&#x27;s management interface, and
+search the net for instructions.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;unattended-upgrades&quot;&gt;Unattended Upgrades&lt;&#x2F;h3&gt;
+&lt;p&gt;Last but not least, let&#x27;s configure Unattended Upgrades. Quoting the &lt;a href=&quot;https:&#x2F;&#x2F;wiki.debian.org&#x2F;UnattendedUpgrades&quot;&gt;official documentation&lt;&#x2F;a&gt;:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The purpose of unattended-upgrades is to keep the computer current with the
+latest security (and other) updates automatically.&lt;&#x2F;p&gt;
+&lt;p&gt;If you plan to use it, you should have some means to monitor your systems,
+such as installing the apt-listchanges package and configuring it to send you
+emails about updates. And there is always &#x2F;var&#x2F;log&#x2F;dpkg.log, or the files in
+&#x2F;var&#x2F;log&#x2F;unattended-upgrades&#x2F;.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Let&#x27;s set everything up. I will only write down the commands with some comments.
+Refer the the &lt;a href=&quot;https:&#x2F;&#x2F;wiki.debian.org&#x2F;UnattendedUpgrades&quot;&gt;official documentation&lt;&#x2F;a&gt; for more details.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-get install unattended-upgrades apt-listchanges
+dpkg-reconfigure&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -plow&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; unattended-upgrades
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h4 id=&quot;email-configuration-to-be-notified-during-upgrades&quot;&gt;Email configuration, to be notified during upgrades&lt;&#x2F;h4&gt;
+&lt;p&gt;To be notified by emails, update &lt;code&gt;&#x2F;etc&#x2F;apt&#x2F;apt.conf.d&#x2F;50unattended-upgrades&lt;&#x2F;code&gt;:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-cpp&quot; data-lang=&quot;cpp&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;Unattended&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;-&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;Upgrade::Mail &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;&amp;quot;root&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;&lt;strong&gt;Credits&lt;&#x2F;strong&gt;: &lt;a href=&quot;https:&#x2F;&#x2F;blog.bobbyallen.me&#x2F;2013&#x2F;02&#x2F;03&#x2F;how-to-redirect-local-root-mail-to-an-external-email-address-on-linux&#x2F;&quot;&gt;Redirection to the mailbox&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;TODO: &lt;a href=&quot;https:&#x2F;&#x2F;zurgl.com&#x2F;how-to-configure-tls-encryption-in-postfix&#x2F;&quot;&gt;Configure encryption&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Install and configure postfix + mailx
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-get install postfix mailutils
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;## Chose &amp;quot;Internet mail&amp;quot; if domain name, otherwise &amp;quot;Local only&amp;quot;
+
+# Setup redirection from local emails to external mailbox (only if &amp;quot;Internet Mail&amp;quot;)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudoedit &#x2F;etc&#x2F;aliases
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;## Add: root: my-email@mail-provider.net
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo newaliases
+sudo systemctl restart postfix
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Test it (look in your spam folder)
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;echo &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;&amp;quot;This is a test.&amp;quot; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;mail&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -s &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;&amp;quot;Test email from server&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; root
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Phew, now Debian is configured.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;miscellaneous-tools&quot;&gt;Miscellaneous tools&lt;&#x2F;h2&gt;
+&lt;p&gt;Those tools are not mandatory, but I find them convenient.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;necessary-tools&quot;&gt;Necessary tools&lt;&#x2F;h3&gt;
+&lt;p&gt;Those are just must have:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install curl
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;mosh-mobile-sh&quot;&gt;Mosh - Mobile SH&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;mosh.org&#x2F;&quot;&gt;https:&#x2F;&#x2F;mosh.org&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;SSH connections easily hang up and disconnect, if your laptop goes to sleep or
+your phone changes antenna. To solve this problem, I use Mosh, that basically
+never dies.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-get install mosh
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Allow 20 simultaneous connections in the firewall
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo ufw allow 60001:60020&#x2F;udp
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now, you should be able to use Mosh instead of SSH:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;mosh user@server-ip
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;tmux-terminal-multiplexer&quot;&gt;tmux - Terminal multiplexer&lt;&#x2F;h3&gt;
+&lt;p&gt;tmux is another way of solving the disconnection issue I just mentioned, but is
+not limited to that: as the name suggests, it enable multiplexing terminal, i.e.
+having multiple terminals inside one. I won&#x27;t elaborate much, because that would
+require yet another post, and because the net is full of good resources.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install tmux
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Basic how-to
+## To run it, do only once, or after restarts of the server
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;tmux
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;## To attach to a running session
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;tmux a
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;tmux special key is &lt;code&gt;Ctrl+B&lt;&#x2F;code&gt;. Then, if you need quick help, use &lt;code&gt;Ctrl+B, ?&lt;&#x2F;code&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;ranger-vim-inspired-file-manager&quot;&gt;ranger - VIM-inspired file manager&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ranger&#x2F;ranger&quot;&gt;https:&#x2F;&#x2F;github.com&#x2F;ranger&#x2F;ranger&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install ranger
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# To use it:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;ranger
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;To get started, read &lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;ranger&#x2F;ranger&quot;&gt;ranger&#x27;s GitHub page&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;htop-interactive-process-viewer&quot;&gt;htop - interactive process viewer&lt;&#x2F;h3&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;hisham.hm&#x2F;htop&#x2F;&quot;&gt;https:&#x2F;&#x2F;hisham.hm&#x2F;htop&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install htop
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# To use it:
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;htop
+htop&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -u&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; user
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;If you want to hide threads (lines in green): &lt;strong&gt;F2&lt;&#x2F;strong&gt; &amp;gt; &lt;strong&gt;Display options&lt;&#x2F;strong&gt; &amp;gt; &lt;strong&gt;Hide userland
+process threads&lt;&#x2F;strong&gt;.&lt;&#x2F;p&gt;
+&lt;h3 id=&quot;earlyoom-kills-hungry-processes-early&quot;&gt;EarlyOOM - kills hungry processes early&lt;&#x2F;h3&gt;
+&lt;p&gt;Linux features an Out-Of-Memory Killer (OOM killer) that will terminate one or
+more processes to free up memory for the system when the available memory is
+exhausted. It selects the process to kill based on complex heuristics. However,
+it is not configurable and I often found that it triggered too late.&lt;&#x2F;p&gt;
+&lt;p&gt;EarlyOOM does the same job, but at a configurable threshold.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install earlyoom
+
+sudo systemctl status earlyoom
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# To reduce the threshold to 4%
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudoedit &#x2F;etc&#x2F;default&#x2F;earlyoom
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;## EARLYOOM_ARGS=&amp;quot;-r 60 -m 4&amp;quot;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo systemctl restart earlyoom
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;The default threshold is at 10%, where a SIGTERM is sent, and 5% with a SIGKILL.
+I reduced from 10% to 4% because my server is short on resources an I have
+hungry services.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;monitoring-and-alerting-with-netdata&quot;&gt;Monitoring and alerting with Netdata&lt;&#x2F;h2&gt;
+&lt;p&gt;I won&#x27;t elaborate on the necessity to have monitoring and alerting for an
+infrastructure. &lt;a href=&quot;https:&#x2F;&#x2F;www.netdata.cloud&#x2F;&quot;&gt;Netdata&lt;&#x2F;a&gt; is a free and open source solution
+just for that.&lt;&#x2F;p&gt;
+&lt;p&gt;I choose to install it independently as Docker, i.e. no as a Docker container,
+to isolate it from Docker failures.&lt;&#x2F;p&gt;
+&lt;p&gt;I recommend heading to the official website for instructions:
+&lt;a href=&quot;https:&#x2F;&#x2F;learn.netdata.cloud&#x2F;&quot;&gt;https:&#x2F;&#x2F;learn.netdata.cloud&#x2F;&lt;&#x2F;a&gt;.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;strong&gt;TL;DR&lt;&#x2F;strong&gt;: If you want the stable channel:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install curl
+bash &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;(curl&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -Ss&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; https:&#x2F;&#x2F;my-netdata.io&#x2F;kickstart.sh)&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; --stable-channel
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;Now, head to: &lt;a href=&quot;http:&#x2F;&#x2F;localhost:19999&quot;&gt;http:&#x2F;&#x2F;localhost:19999&lt;&#x2F;a&gt;... And that won&#x27;t
+work, because the firewall won&#x27;t let us enter. You can open the port as below,
+read the following section or use a reverse-proxy such as Caddy or Nginx. Your
+choice :)&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo ufw allow 19999
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;&lt;h3 id=&quot;netdata-cloud&quot;&gt;Netdata Cloud&lt;&#x2F;h3&gt;
+&lt;p&gt;Instead of opening a port and configuring your firewall, you can opt to use
+&lt;a href=&quot;https:&#x2F;&#x2F;www.netdata.cloud&#x2F;&quot;&gt;Netdata Cloud&lt;&#x2F;a&gt; instead. That&#x27;s a free service to monitor as many
+servers as you want (and offer them a backdoor in your infrastructure). Their
+website is clear enough, so I won&#x27;t go into the procedure.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;www.netdata.cloud&#x2F;&quot;&gt;https:&#x2F;&#x2F;www.netdata.cloud&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;small-break-break-it-all&quot;&gt;Small break: Break it all&lt;&#x2F;h2&gt;
+&lt;p&gt;Now is time to see how our system behaves in presence of failure. We have
+EarlyOOM to kill bad processes (remember, it checks every 60 seconds by
+default), Mosh that will never die, Netdata to alert us (it has default
+alert rules) and &lt;code&gt;postfix&lt;&#x2F;code&gt; to forward emails right to our mailbox.&lt;&#x2F;p&gt;
+&lt;p&gt;An easy and efficient way to hang the system is the fork bomb (explanations
+&lt;a href=&quot;https:&#x2F;&#x2F;www.cyberciti.biz&#x2F;faq&#x2F;understanding-bash-fork-bomb&#x2F;&quot;&gt;here&lt;&#x2F;a&gt;). Type that and observe:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#a6e22e;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;(){ &lt;&#x2F;span&gt;&lt;span style=&quot;color:#66d9ef;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;|&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;:&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;amp; &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;}&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#66d9ef;&quot;&gt;:
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;p&gt;... Ok, EarlyOOM didn&#x27;t help, and emails from postfix came afterwards or not at
+all because the system was busy. But I don&#x27;t have an idea for a fast way to
+break it other than the fork bomb. Still, you should see red on Netdata Cloud
+dashboard.&lt;&#x2F;p&gt;
+&lt;p&gt;Depending on your luck, your server will recover or not. If it does not, just
+head to your management website and reboot it.&lt;&#x2F;p&gt;
+&lt;h2 id=&quot;docker&quot;&gt;Docker&lt;&#x2F;h2&gt;
+&lt;p&gt;Now let&#x27;s go with Docker. I won&#x27;t introduce it, again, the net is full of good
+resources. As usual, I recommend reading the official instructions on the
+website:&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;docs.docker.com&#x2F;install&#x2F;linux&#x2F;docker-ce&#x2F;debian&#x2F;&quot;&gt;https:&#x2F;&#x2F;docs.docker.com&#x2F;install&#x2F;linux&#x2F;docker-ce&#x2F;debian&#x2F;&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;p&gt;But here is a recap:&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Install necessary prerequisites
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-get update
+sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Add Docker&amp;#39;s official PGP key
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;curl&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -fsSL&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; https:&#x2F;&#x2F;download.docker.com&#x2F;linux&#x2F;debian&#x2F;gpg &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;| &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-key add -
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Verify the key
+# Should be: 9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-key fingerprint 0EBFCD88
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Add the stable Docker repository
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo add-apt-repository \
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;&amp;quot;deb [arch=amd64] https:&#x2F;&#x2F;download.docker.com&#x2F;linux&#x2F;debian &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;\
+   &lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;$(lsb_release&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -cs&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;) &lt;&#x2F;span&gt;&lt;span style=&quot;color:#ae81ff;&quot;&gt;\
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;   stable&amp;quot;
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Install Docker Engine - Community
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Verify the install
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo docker run hello-world
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Add your user to the docker group to avoid having to use sudo each time
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo usermod&lt;&#x2F;span&gt;&lt;span style=&quot;font-style:italic;color:#fd971f;&quot;&gt; -aG&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt; docker &lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;user&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# You need to logout and login
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;docker run hello-world
+
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#75715e;&quot;&gt;# Install docker-compose
+&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;sudo apt install docker-compose
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;hr &#x2F;&gt;
+&lt;p&gt;In future articles:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;Caddy or Traefik?&lt;&#x2F;li&gt;
+&lt;li&gt;Docker Swarm vs Kubernetes&lt;&#x2F;li&gt;
+&lt;li&gt;Docker Swarm&lt;&#x2F;li&gt;
+&lt;li&gt;Swarmpit&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>Let&#x27;s try something new</title>
+		<published>2020-07-23T00:00:00+00:00</published>
+		<updated>2020-07-23T00:00:00+00:00</updated>
+		<link href="https://blog.busy.ovh/hello/" type="text/html"/>
+		<id>https://blog.busy.ovh/hello/</id>
+		<content type="html">&lt;p&gt;This is my first post on this blog. Not my first blog post ever though. I
+already started many blogs in the past, but none of them really went further
+than the customary &amp;quot;Hello blog&amp;quot; initial post.&lt;&#x2F;p&gt;
+&lt;p&gt;This time, it&#x27;s different. I am starting this one from a need: I need to write
+down stuff somewhere, and I figured out that a blog would do that perfectly.
+More precisely, I want to write down some instructions about setting up private
+servers, installing Docker, building clusters, that sort of stuff. So this blog
+will be rather technical, at least at the beginning.&lt;&#x2F;p&gt;
+&lt;p&gt;A few weeks ago (months?), I stumbled across an article from &lt;a href=&quot;https:&#x2F;&#x2F;www.welcometothejungle.com&#x2F;&quot;&gt;Welcome To the
+jungle&lt;&#x2F;a&gt; titled &amp;quot;&lt;a href=&quot;https:&#x2F;&#x2F;www.welcometothejungle.com&#x2F;articles&#x2F;successful-personal-blog-developer&quot;&gt;How to Create a Personal Blog as a
+Developer&lt;&#x2F;a&gt;&amp;quot;. I leave that here in case I later want to read it
+again, as it contains good advices for the newcomer.&lt;&#x2F;p&gt;
+&lt;p&gt;About the technology behind this very blog: it is a static site, generated by
+&lt;a href=&quot;https:&#x2F;&#x2F;www.getzola.org&#x2F;&quot;&gt;Zola&lt;&#x2F;a&gt;. It&#x27;s similar to Jekyll, what I had before (that one only had the
+&lt;a href=&quot;&#x2F;pathbot-experiment&#x2F;&quot;&gt;Pathbot experiment&lt;&#x2F;a&gt; that I moved here, that&#x27;s why this
+article is not the oldest), but it feels simpler. I initially wanted to just
+update my Jekyll one, but the CLI failed to run because of missing dependencies
+or something. I want something simple that doesn&#x27;t break. Zola being distributed
+as a static binary (thank you Rust), this is perfect.&lt;&#x2F;p&gt;
+&lt;p&gt;Here are some TODOs, that I should eventually address:&lt;&#x2F;p&gt;
+&lt;ul&gt;
+&lt;li&gt;A better theme, featuring at least static pages (resume, TODO list) and
+categories.&lt;&#x2F;li&gt;
+&lt;li&gt;Analytics, but not trackers, because I would like to know if this blog is
+having some audience.&lt;&#x2F;li&gt;
+&lt;&#x2F;ul&gt;
+</content>
+	</entry>
+	<entry xml:lang="en">
+		<title>My Pathbot experiment</title>
+		<published>2019-07-09T00:00:00+00:00</published>
+		<updated>2019-07-09T00:00:00+00:00</updated>
+		<link href="https://blog.busy.ovh/pathbot-experiment/" type="text/html"/>
+		<id>https://blog.busy.ovh/pathbot-experiment/</id>
+		<content type="html">&lt;div style=&quot;float: right; display: flex&quot;&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.busy.ovh&#x2F;pathbot-experiment&#x2F;web-assembly-logo-128px.png&quot; alt=&quot;WebAssembly&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;div style=&quot;float: right; display: flex&quot;&gt;
+&lt;p&gt;&lt;img src=&quot;https:&#x2F;&#x2F;blog.busy.ovh&#x2F;pathbot-experiment&#x2F;rust-logo-blk-72px.png&quot; alt=&quot;Rust&quot; &#x2F;&gt;&lt;&#x2F;p&gt;
+&lt;&#x2F;div&gt;
+&lt;p&gt;A little Pathbot experiment.&lt;&#x2F;p&gt;
+&lt;p&gt;&lt;a href=&quot;https:&#x2F;&#x2F;github.com&#x2F;totorigolo&#x2F;pathbot&quot;&gt;Source code&lt;&#x2F;a&gt;&lt;&#x2F;p&gt;
+&lt;br style=&quot;clear: both&quot; &#x2F;&gt;
+&lt;p&gt;&lt;strong&gt;EDIT 2020-07-23&lt;&#x2F;strong&gt;: Last year, approx. June 2019, GitHub introduced the &lt;a href=&quot;https:&#x2F;&#x2F;noopschallenge.com&#x2F;&quot;&gt;Noops
+Challenge&lt;&#x2F;a&gt;, with a simple concept:&lt;&#x2F;p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Love a challenge? The Noops are inexplicable machines that don’t do anything
+at all. Pick one, make it do something, and have fun with code along the way.&lt;&#x2F;p&gt;
+&lt;&#x2F;blockquote&gt;
+&lt;p&gt;Basically, they created bots with simple APIs, especially designed to offer a
+wide range of hacks based upon them. I got inspired by &lt;a href=&quot;https:&#x2F;&#x2F;noopschallenge.com&#x2F;challenges&#x2F;pathbot&quot;&gt;Pathbot&lt;&#x2F;a&gt;, and
+took the opportunity to create a (small-but-) real project with &lt;a href=&quot;https:&#x2F;&#x2F;yew.rs&#x2F;&quot;&gt;Yew&lt;&#x2F;a&gt;, a
+Rust framework inspired by React and Elm that compiles to WebAssembly.&lt;&#x2F;p&gt;
+&lt;p&gt;The code is open source, you can find the link above. Below is how this is
+integrated on this website.&lt;&#x2F;p&gt;
+&lt;pre style=&quot;background-color:#272822;&quot;&gt;
+&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;div &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a6e22e;&quot;&gt;id&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;&amp;quot;pathbot-root&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;&amp;gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;div&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;&amp;gt;
+&amp;lt;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;script &lt;&#x2F;span&gt;&lt;span style=&quot;color:#a6e22e;&quot;&gt;defer src&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;=&lt;&#x2F;span&gt;&lt;span style=&quot;color:#e6db74;&quot;&gt;&amp;quot;.&#x2F;pathbot.js&amp;quot;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;&amp;gt;&amp;lt;&#x2F;&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f92672;&quot;&gt;script&lt;&#x2F;span&gt;&lt;span style=&quot;color:#f8f8f2;&quot;&gt;&amp;gt;
+&lt;&#x2F;span&gt;&lt;&#x2F;code&gt;&lt;&#x2F;pre&gt;
+&lt;hr &#x2F;&gt;
+&lt;div id=&quot;pathbot-root&quot;&gt;&lt;&#x2F;div&gt;
+&lt;script defer src=&quot;.&#x2F;pathbot.js&quot;&gt;&lt;&#x2F;script&gt;
+</content>
+	</entry>
+</feed>

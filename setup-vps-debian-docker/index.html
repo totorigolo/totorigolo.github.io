@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title>How to setup a VPS - Debian, Docker</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+    
+
+    
+    
+  </head>
+
+  <body class="theme-base-0d ">
+    
+        <div class="sidebar">
+            <div class="container sidebar-sticky">
+                <div class="sidebar-about">
+                    
+                        <a href="https:&#x2F;&#x2F;blog.busy.ovh"><h1>Thomas Lacroix</h1></a>
+                        
+                        <p class="lead">Wanderings and random thoughts.</p>
+                        
+                    
+                </div>
+
+                <ul class="sidebar-nav">
+                    
+                    
+                    <li class="sidebar-nav-item"><a href="https:&#x2F;&#x2F;github.com&#x2F;totorigolo">totorigolo@GitHub</a></li>
+                    
+                    <li class="sidebar-nav-item"><a href="https:&#x2F;&#x2F;github.com&#x2F;tholac">tholac@GitHub</a></li>
+                    
+                    <li class="sidebar-nav-item"><a href="&#x2F;atom.xml">RSS &#x2F; Atom</a></li>
+                    
+                    
+                </ul>
+            </div>
+        </div>
+    
+
+    <div class="content container">
+      
+<div class="post">
+  <h1 class="post-title">How to setup a VPS - Debian, Docker</h1>
+  
+    <span class="post-date">
+      2020-07-24
+    </span>
+  
+  <p>In this article, I will describe how I setup my VPS servers based on Debian 10.
+The goal of this setup is to have a working and secure Docker setup with
+some monitoring and a few nice tools.</p>
+<h2 id="password-manager">Password manager</h2>
+<p>I won't elaborate on the absolute necessity to use a password manager. I am
+using Keepass, and that's more than useful to store all those lengthy passwords.</p>
+<p>I have chosen Keepass because it's free and open source software, and it's very
+secure. On Windows, I recommend using the <a href="https://keepass.info/">official client</a>. On other
+platforms, I find <a href="https://keepassxc.org/">KeepassXC</a> more stable. Note that both are
+compatible as they use the same file format to store passwords.</p>
+<h2 id="debian-10">Debian 10</h2>
+<p>This is on you, as it varies for each cloud provider. I chose Debian because it
+doesn't evolve too fast, so I can forget it for a while without fear that I am
+late on updates. To be really safe doing so, I took the following actions:</p>
+<ul>
+<li>I subscribed to the <a href="https://lists.debian.org/debian-security-announce/">Debian security newsletter</a>.</li>
+<li>I skimmed through the <a href="https://www.debian.org/security/faq">Debian Security FAQ</a>.</li>
+<li>I skimmed through the <a href="https://www.debian.org/doc/user-manuals#securing">Securing Debian Manual</a> (I hope I
+didn't overlook something).</li>
+</ul>
+<p><strong>Credits</strong>: I took inspiration from DigitalOcean's <a href="https://www.digitalocean.com/community/tutorials/initial-server-setup-with-debian-10">great
+tutorial</a> to write down those instructions. I
+recommend reading it, as I will not go into the details of the procedure.</p>
+<h3 id="connecting-via-ssh-and-creating-a-new-user">Connecting via SSH and creating a new user</h3>
+<p>From your computer's terminal:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">ssh root@your_server_ip
+
+</span><span style="color:#75715e;"># Change your root password if you haven&#39;t done it yet
+</span><span style="color:#f8f8f2;">passwd
+</span></code></pre>
+<p>As we should not use <code>root</code> when not necessary, we will create a new user right
+away (I will use <code>tlacroix</code>, replace it with whatever username you want). This
+user will be a super-user, as we will use it for the following steps.</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">adduser tlacroix
+usermod</span><span style="font-style:italic;color:#fd971f;"> -aG</span><span style="color:#f8f8f2;"> sudo tlacroix
+</span></code></pre>
+<p>We can take the opportunity to do an update, just in case:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">apt update
+apt upgrade
+</span></code></pre><h3 id="configuring-ssh-key-for-the-new-user">Configuring SSH key for the new user</h3>
+<p><strong>Credits</strong>: <a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-ssh-keys-on-debian-10">How to Set Up SSH Keys on Debian
+10</a>.
+Read it for more details.</p>
+<p>Create a key on your personal computer (use one per computer!) if you don't
+already have one. From you computer, do:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">ssh-keygen</span><span style="font-style:italic;color:#fd971f;"> -b</span><span style="color:#f8f8f2;"> 4096
+</span></code></pre>
+<p>I recommend using a passphrase, to stay safe when you forget to lock you
+computer.</p>
+<p>Now, we must copy the public key to the server. From your computer, do:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">ssh-copy-id username@your_server_ip
+</span></code></pre>
+<p>Now you don't have to use your user password anymore, but the SSH key
+passphrase.</p>
+<h3 id="securing-ssh">Securing SSH</h3>
+<p>Now that we can login as someone else than <code>root</code> without having to type a
+password, let's forbid root login. Edit <code>/etc/ssh/sshd_config</code> and update as
+follows:</p>
+<pre style="background-color:#272822;">
+<code class="language-ini" data-lang="ini"><span style="font-style:italic;color:#fd971f;">PermitRootLogin </span><span style="color:#ae81ff;">no
+</span><span style="font-style:italic;color:#fd971f;">PermitEmptyPasswords </span><span style="color:#ae81ff;">no
+</span><span style="font-style:italic;color:#fd971f;">PasswordAuthentication </span><span style="color:#ae81ff;">no  </span><span style="color:#f92672;">&lt;--</span><span style="color:#f8f8f2;"> force using </span><span style="color:#66d9ef;">SSH</span><span style="color:#f8f8f2;"> keys
+</span></code></pre>
+<p>Then restart the SSH daemon:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo systemctl restart ssh
+</span></code></pre><h3 id="firewall-initial-setup">Firewall - Initial setup</h3>
+<p>Now is a good time to setup a firewall, <del>to complicate our life</del> to control
+what goes in and out of our server. We will come back to it later multiple
+times, each time we will need to make a port visible to the outside world.</p>
+<p>I was previously using <code>iptables</code>, but I find it too cumbersome to use. To
+persist its configuration, I created a <code>systemd</code> service running a script during
+boot, located under <code>/etc</code>, that contained calls to <code>iptables</code> to configure it.
+However, this file had a non-obvious syntax (<code>iptables</code> CLI, actually), so I'm
+moving to <code>ufw</code>, the <em>Uncomplicated Firewall</em>.</p>
+<p><strong>Tip</strong>: if, in the future, you have connectivity issues with some service
+during initial setup, chances are high that it's because of the firewall. Always
+keep that in mind.</p>
+<p>From your server:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#75715e;"># Install UFW
+</span><span style="color:#f8f8f2;">sudo apt update
+sudo apt install ufw
+
+</span><span style="color:#75715e;"># Allow OpenSSH (otherwise we would be locked out)
+</span><span style="color:#f8f8f2;">sudo ufw allow OpenSSH
+
+</span><span style="color:#75715e;"># Only do *after* the previous command
+</span><span style="color:#f8f8f2;">sudo ufw enable
+
+</span><span style="color:#75715e;"># To have the current status of the firewall
+</span><span style="color:#f8f8f2;">sudo ufw status verbose
+</span></code></pre>
+<p>Now, if by accident you do get locked out of your server because of the
+firewall, have a look for &quot;KVM&quot; in your provider's management interface, and
+search the net for instructions.</p>
+<h3 id="unattended-upgrades">Unattended Upgrades</h3>
+<p>Last but not least, let's configure Unattended Upgrades. Quoting the <a href="https://wiki.debian.org/UnattendedUpgrades">official documentation</a>:</p>
+<blockquote>
+<p>The purpose of unattended-upgrades is to keep the computer current with the
+latest security (and other) updates automatically.</p>
+<p>If you plan to use it, you should have some means to monitor your systems,
+such as installing the apt-listchanges package and configuring it to send you
+emails about updates. And there is always /var/log/dpkg.log, or the files in
+/var/log/unattended-upgrades/.</p>
+</blockquote>
+<p>Let's set everything up. I will only write down the commands with some comments.
+Refer the the <a href="https://wiki.debian.org/UnattendedUpgrades">official documentation</a> for more details.</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt-get install unattended-upgrades apt-listchanges
+dpkg-reconfigure</span><span style="font-style:italic;color:#fd971f;"> -plow</span><span style="color:#f8f8f2;"> unattended-upgrades
+</span></code></pre><h4 id="email-configuration-to-be-notified-during-upgrades">Email configuration, to be notified during upgrades</h4>
+<p>To be notified by emails, update <code>/etc/apt/apt.conf.d/50unattended-upgrades</code>:</p>
+<pre style="background-color:#272822;">
+<code class="language-cpp" data-lang="cpp"><span style="color:#f8f8f2;">Unattended</span><span style="color:#f92672;">-</span><span style="color:#f8f8f2;">Upgrade::Mail </span><span style="color:#e6db74;">&quot;root&quot;</span><span style="color:#f8f8f2;">;
+</span></code></pre>
+<p><strong>Credits</strong>: <a href="https://blog.bobbyallen.me/2013/02/03/how-to-redirect-local-root-mail-to-an-external-email-address-on-linux/">Redirection to the mailbox</a></p>
+<p>TODO: <a href="https://zurgl.com/how-to-configure-tls-encryption-in-postfix/">Configure encryption</a>.</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#75715e;"># Install and configure postfix + mailx
+</span><span style="color:#f8f8f2;">sudo apt-get install postfix mailutils
+</span><span style="color:#75715e;">## Chose &quot;Internet mail&quot; if domain name, otherwise &quot;Local only&quot;
+
+# Setup redirection from local emails to external mailbox (only if &quot;Internet Mail&quot;)
+</span><span style="color:#f8f8f2;">sudoedit /etc/aliases
+</span><span style="color:#75715e;">## Add: root: my-email@mail-provider.net
+</span><span style="color:#f8f8f2;">sudo newaliases
+sudo systemctl restart postfix
+
+</span><span style="color:#75715e;"># Test it (look in your spam folder)
+</span><span style="color:#f8f8f2;">echo </span><span style="color:#e6db74;">&quot;This is a test.&quot; </span><span style="color:#f92672;">| </span><span style="color:#f8f8f2;">mail</span><span style="font-style:italic;color:#fd971f;"> -s </span><span style="color:#e6db74;">&quot;Test email from server&quot;</span><span style="color:#f8f8f2;"> root
+</span></code></pre>
+<p>Phew, now Debian is configured.</p>
+<h2 id="miscellaneous-tools">Miscellaneous tools</h2>
+<p>Those tools are not mandatory, but I find them convenient.</p>
+<h3 id="necessary-tools">Necessary tools</h3>
+<p>Those are just must have:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt install curl
+</span></code></pre><h3 id="mosh-mobile-sh">Mosh - Mobile SH</h3>
+<p><a href="https://mosh.org/">https://mosh.org/</a></p>
+<p>SSH connections easily hang up and disconnect, if your laptop goes to sleep or
+your phone changes antenna. To solve this problem, I use Mosh, that basically
+never dies.</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt-get install mosh
+
+</span><span style="color:#75715e;"># Allow 20 simultaneous connections in the firewall
+</span><span style="color:#f8f8f2;">sudo ufw allow 60001:60020/udp
+</span></code></pre>
+<p>Now, you should be able to use Mosh instead of SSH:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">mosh user@server-ip
+</span></code></pre><h3 id="tmux-terminal-multiplexer">tmux - Terminal multiplexer</h3>
+<p>tmux is another way of solving the disconnection issue I just mentioned, but is
+not limited to that: as the name suggests, it enable multiplexing terminal, i.e.
+having multiple terminals inside one. I won't elaborate much, because that would
+require yet another post, and because the net is full of good resources.</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt install tmux
+
+</span><span style="color:#75715e;"># Basic how-to
+## To run it, do only once, or after restarts of the server
+</span><span style="color:#f8f8f2;">tmux
+</span><span style="color:#75715e;">## To attach to a running session
+</span><span style="color:#f8f8f2;">tmux a
+</span></code></pre>
+<p>tmux special key is <code>Ctrl+B</code>. Then, if you need quick help, use <code>Ctrl+B, ?</code>.</p>
+<h3 id="ranger-vim-inspired-file-manager">ranger - VIM-inspired file manager</h3>
+<p><a href="https://github.com/ranger/ranger">https://github.com/ranger/ranger</a></p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt install ranger
+
+</span><span style="color:#75715e;"># To use it:
+</span><span style="color:#f8f8f2;">ranger
+</span></code></pre>
+<p>To get started, read <a href="https://github.com/ranger/ranger">ranger's GitHub page</a>.</p>
+<h3 id="htop-interactive-process-viewer">htop - interactive process viewer</h3>
+<p><a href="https://hisham.hm/htop/">https://hisham.hm/htop/</a></p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt install htop
+
+</span><span style="color:#75715e;"># To use it:
+</span><span style="color:#f8f8f2;">htop
+htop</span><span style="font-style:italic;color:#fd971f;"> -u</span><span style="color:#f8f8f2;"> user
+</span></code></pre>
+<p>If you want to hide threads (lines in green): <strong>F2</strong> &gt; <strong>Display options</strong> &gt; <strong>Hide userland
+process threads</strong>.</p>
+<h3 id="earlyoom-kills-hungry-processes-early">EarlyOOM - kills hungry processes early</h3>
+<p>Linux features an Out-Of-Memory Killer (OOM killer) that will terminate one or
+more processes to free up memory for the system when the available memory is
+exhausted. It selects the process to kill based on complex heuristics. However,
+it is not configurable and I often found that it triggered too late.</p>
+<p>EarlyOOM does the same job, but at a configurable threshold.</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt install earlyoom
+
+sudo systemctl status earlyoom
+
+</span><span style="color:#75715e;"># To reduce the threshold to 4%
+</span><span style="color:#f8f8f2;">sudoedit /etc/default/earlyoom
+</span><span style="color:#75715e;">## EARLYOOM_ARGS=&quot;-r 60 -m 4&quot;
+</span><span style="color:#f8f8f2;">sudo systemctl restart earlyoom
+</span></code></pre>
+<p>The default threshold is at 10%, where a SIGTERM is sent, and 5% with a SIGKILL.
+I reduced from 10% to 4% because my server is short on resources an I have
+hungry services.</p>
+<h2 id="monitoring-and-alerting-with-netdata">Monitoring and alerting with Netdata</h2>
+<p>I won't elaborate on the necessity to have monitoring and alerting for an
+infrastructure. <a href="https://www.netdata.cloud/">Netdata</a> is a free and open source solution
+just for that.</p>
+<p>I choose to install it independently as Docker, i.e. no as a Docker container,
+to isolate it from Docker failures.</p>
+<p>I recommend heading to the official website for instructions:
+<a href="https://learn.netdata.cloud/">https://learn.netdata.cloud/</a>.</p>
+<p><strong>TL;DR</strong>: If you want the stable channel:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo apt install curl
+bash </span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">(curl</span><span style="font-style:italic;color:#fd971f;"> -Ss</span><span style="color:#f8f8f2;"> https://my-netdata.io/kickstart.sh)</span><span style="font-style:italic;color:#fd971f;"> --stable-channel
+</span></code></pre>
+<p>Now, head to: <a href="http://localhost:19999">http://localhost:19999</a>... And that won't
+work, because the firewall won't let us enter. You can open the port as below,
+read the following section or use a reverse-proxy such as Caddy or Nginx. Your
+choice :)</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#f8f8f2;">sudo ufw allow 19999
+</span></code></pre><h3 id="netdata-cloud">Netdata Cloud</h3>
+<p>Instead of opening a port and configuring your firewall, you can opt to use
+<a href="https://www.netdata.cloud/">Netdata Cloud</a> instead. That's a free service to monitor as many
+servers as you want (and offer them a backdoor in your infrastructure). Their
+website is clear enough, so I won't go into the procedure.</p>
+<p><a href="https://www.netdata.cloud/">https://www.netdata.cloud/</a></p>
+<h2 id="small-break-break-it-all">Small break: Break it all</h2>
+<p>Now is time to see how our system behaves in presence of failure. We have
+EarlyOOM to kill bad processes (remember, it checks every 60 seconds by
+default), Mosh that will never die, Netdata to alert us (it has default
+alert rules) and <code>postfix</code> to forward emails right to our mailbox.</p>
+<p>An easy and efficient way to hang the system is the fork bomb (explanations
+<a href="https://www.cyberciti.biz/faq/understanding-bash-fork-bomb/">here</a>). Type that and observe:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#a6e22e;">:</span><span style="color:#f8f8f2;">(){ </span><span style="color:#66d9ef;">:</span><span style="color:#f92672;">|</span><span style="color:#f8f8f2;">:</span><span style="color:#f92672;">&amp; </span><span style="color:#f8f8f2;">}</span><span style="color:#f92672;">;</span><span style="color:#66d9ef;">:
+</span></code></pre>
+<p>... Ok, EarlyOOM didn't help, and emails from postfix came afterwards or not at
+all because the system was busy. But I don't have an idea for a fast way to
+break it other than the fork bomb. Still, you should see red on Netdata Cloud
+dashboard.</p>
+<p>Depending on your luck, your server will recover or not. If it does not, just
+head to your management website and reboot it.</p>
+<h2 id="docker">Docker</h2>
+<p>Now let's go with Docker. I won't introduce it, again, the net is full of good
+resources. As usual, I recommend reading the official instructions on the
+website:</p>
+<p><a href="https://docs.docker.com/install/linux/docker-ce/debian/">https://docs.docker.com/install/linux/docker-ce/debian/</a></p>
+<p>But here is a recap:</p>
+<pre style="background-color:#272822;">
+<code class="language-bash" data-lang="bash"><span style="color:#75715e;"># Install necessary prerequisites
+</span><span style="color:#f8f8f2;">sudo apt-get update
+sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg2 \
+    software-properties-common
+
+</span><span style="color:#75715e;"># Add Docker&#39;s official PGP key
+</span><span style="color:#f8f8f2;">curl</span><span style="font-style:italic;color:#fd971f;"> -fsSL</span><span style="color:#f8f8f2;"> https://download.docker.com/linux/debian/gpg </span><span style="color:#f92672;">| </span><span style="color:#f8f8f2;">sudo apt-key add -
+
+</span><span style="color:#75715e;"># Verify the key
+# Should be: 9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88
+</span><span style="color:#f8f8f2;">sudo apt-key fingerprint 0EBFCD88
+
+</span><span style="color:#75715e;"># Add the stable Docker repository
+</span><span style="color:#f8f8f2;">sudo add-apt-repository \
+   </span><span style="color:#e6db74;">&quot;deb [arch=amd64] https://download.docker.com/linux/debian </span><span style="color:#ae81ff;">\
+   </span><span style="color:#e6db74;">$(lsb_release</span><span style="font-style:italic;color:#fd971f;"> -cs</span><span style="color:#e6db74;">) </span><span style="color:#ae81ff;">\
+</span><span style="color:#e6db74;">   stable&quot;
+
+</span><span style="color:#75715e;"># Install Docker Engine - Community
+</span><span style="color:#f8f8f2;">sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+</span><span style="color:#75715e;"># Verify the install
+</span><span style="color:#f8f8f2;">sudo docker run hello-world
+
+</span><span style="color:#75715e;"># Add your user to the docker group to avoid having to use sudo each time
+</span><span style="color:#f8f8f2;">sudo usermod</span><span style="font-style:italic;color:#fd971f;"> -aG</span><span style="color:#f8f8f2;"> docker </span><span style="color:#f92672;">&lt;</span><span style="color:#f8f8f2;">user</span><span style="color:#f92672;">&gt;
+</span><span style="color:#75715e;"># You need to logout and login
+</span><span style="color:#f8f8f2;">docker run hello-world
+
+</span><span style="color:#75715e;"># Install docker-compose
+</span><span style="color:#f8f8f2;">sudo apt install docker-compose
+</span></code></pre>
+<hr />
+<p>In future articles:</p>
+<ul>
+<li>Caddy or Traefik?</li>
+<li>Docker Swarm vs Kubernetes</li>
+<li>Docker Swarm</li>
+<li>Swarmpit</li>
+</ul>
+
+</div>
+
+    </div>
+  </body>
+</html>

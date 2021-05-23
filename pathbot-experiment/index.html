@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    
+
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="description" content="A little game base on GitHub&#x27;s Pathbot experiment, where you have to escape a maze.">
+
+    <!-- Enable responsiveness on mobile devices-->
+    <!-- viewport-fit=cover is to support iPhone X rounded corners and notch in landscape-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+
+    <title>My Pathbot experiment</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;print.css" media="print">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;poole.css">
+    <link rel="stylesheet" href="https:&#x2F;&#x2F;blog.busy.ovh&#x2F;hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+
+    
+
+    
+    
+  </head>
+
+  <body class="theme-base-0d ">
+    
+        <div class="sidebar">
+            <div class="container sidebar-sticky">
+                <div class="sidebar-about">
+                    
+                        <a href="https:&#x2F;&#x2F;blog.busy.ovh"><h1>Thomas Lacroix</h1></a>
+                        
+                        <p class="lead">Wanderings and random thoughts.</p>
+                        
+                    
+                </div>
+
+                <ul class="sidebar-nav">
+                    
+                    
+                    <li class="sidebar-nav-item"><a href="https:&#x2F;&#x2F;github.com&#x2F;totorigolo">totorigolo@GitHub</a></li>
+                    
+                    <li class="sidebar-nav-item"><a href="https:&#x2F;&#x2F;github.com&#x2F;tholac">tholac@GitHub</a></li>
+                    
+                    <li class="sidebar-nav-item"><a href="&#x2F;atom.xml">RSS &#x2F; Atom</a></li>
+                    
+                    
+                </ul>
+            </div>
+        </div>
+    
+
+    <div class="content container">
+      
+<div class="post">
+  <h1 class="post-title">My Pathbot experiment</h1>
+  
+    <span class="post-date">
+      2019-07-09
+    </span>
+  
+  <div style="float: right; display: flex">
+<p><img src="https://blog.busy.ovh/pathbot-experiment/web-assembly-logo-128px.png" alt="WebAssembly" /></p>
+</div>
+<div style="float: right; display: flex">
+<p><img src="https://blog.busy.ovh/pathbot-experiment/rust-logo-blk-72px.png" alt="Rust" /></p>
+</div>
+<p>A little Pathbot experiment.</p>
+<p><a href="https://github.com/totorigolo/pathbot">Source code</a></p>
+<br style="clear: both" />
+<p><strong>EDIT 2020-07-23</strong>: Last year, approx. June 2019, GitHub introduced the <a href="https://noopschallenge.com/">Noops
+Challenge</a>, with a simple concept:</p>
+<blockquote>
+<p>Love a challenge? The Noops are inexplicable machines that don’t do anything
+at all. Pick one, make it do something, and have fun with code along the way.</p>
+</blockquote>
+<p>Basically, they created bots with simple APIs, especially designed to offer a
+wide range of hacks based upon them. I got inspired by <a href="https://noopschallenge.com/challenges/pathbot">Pathbot</a>, and
+took the opportunity to create a (small-but-) real project with <a href="https://yew.rs/">Yew</a>, a
+Rust framework inspired by React and Elm that compiles to WebAssembly.</p>
+<p>The code is open source, you can find the link above. Below is how this is
+integrated on this website.</p>
+<pre style="background-color:#272822;">
+<code class="language-html" data-lang="html"><span style="color:#f8f8f2;">&lt;</span><span style="color:#f92672;">div </span><span style="color:#a6e22e;">id</span><span style="color:#f8f8f2;">=</span><span style="color:#e6db74;">&quot;pathbot-root&quot;</span><span style="color:#f8f8f2;">&gt;&lt;/</span><span style="color:#f92672;">div</span><span style="color:#f8f8f2;">&gt;
+&lt;</span><span style="color:#f92672;">script </span><span style="color:#a6e22e;">defer src</span><span style="color:#f8f8f2;">=</span><span style="color:#e6db74;">&quot;./pathbot.js&quot;</span><span style="color:#f8f8f2;">&gt;&lt;/</span><span style="color:#f92672;">script</span><span style="color:#f8f8f2;">&gt;
+</span></code></pre>
+<hr />
+<div id="pathbot-root"></div>
+<script defer src="./pathbot.js"></script>
+
+</div>
+
+    </div>
+  </body>
+</html>
